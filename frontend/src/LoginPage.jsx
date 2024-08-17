@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Tabs, Form, Input, Button, message } from 'antd';
+import { Tabs, Form, Input, Button, message as Message } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import './index.css';
-
+import axiosInstance from './utils/axiosInstance';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import Logo from './assets/yileina.jpg';
 import BgImg from './assets/background.jpg';
@@ -14,22 +14,43 @@ const LoginPage = () => {
     return { username: formValues.username };
   }
 
-  function onLoginFinish(values) {
-    
-    let userInfo = getUserInfo(values);
-    console.log('Login Success:', values);
-    //TODO: 实现登录逻辑
-    navigate('/home/', { state: userInfo });
-    message.success('登录成功');
+  async function onLoginFinish(values) {
+    try {
+      const response = await axiosInstance.post('/auth/login', values)
+      const { success, message,userInfo } = response.data;
+      console.log(response.data);
+      if (!success) {
+        Message.error(message);
+        return;
+      }
+      else {
+        navigate('/home/', { state: userInfo });
+        Message.success('登录成功');
+      }
+    } catch (error) {
+      console.error('Login Error:', error);
+      Message.error('登录失败');
+    }
   }
 
-  function onRegisterFinish(values) {
-    let userInfo = getUserInfo(values);
-    console.log('Success:', values);
-    //TODO: 实现注册逻辑
-    navigate('/home', { state: userInfo });
-    message.success('注册成功');
+  async function onRegisterFinish(values) {
+    try {
+      const response = await axiosInstance.post('/auth/register', values);
+      const { success, message,userInfo } = response.data;
+      if (!success) {
+        Message.error(message);
+        return;
+      }
+      else {
+        navigate("/home/", { state: userInfo });
+        Message.success('注册成功');
+      }
+    } catch (error) {
+      console.error('Register Error:', error);
+      Message.error('注册失败');
+    }
   }
+
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-cover bg-center" style={{ backgroundImage: "url(" + BgImg + ")" }}>
@@ -42,10 +63,10 @@ const LoginPage = () => {
 
         <Tabs defaultActiveKey="login" items={
           [
-            { key: 'login', label: '登录', children: <LoginForm onFinish={onLoginFinish}/> },
-            { key: 'register', label: '注册', children: <RegisterForm onFinish={onRegisterFinish}/> },
+            { key: 'login', label: '登录', children: <LoginForm onFinish={onLoginFinish} /> },
+            { key: 'register', label: '注册', children: <RegisterForm onFinish={onRegisterFinish} /> },
           ]
-        }/>
+        } />
 
       </div>
     </div>
